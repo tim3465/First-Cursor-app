@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import type { ApiKey } from '@/types/api-key';
+import { useEffect, useRef, useState } from 'react';
+
 
 interface ApiKeysTableProps {
   apiKeys: ApiKey[];
@@ -22,25 +23,63 @@ export default function ApiKeysTable({
 }: ApiKeysTableProps) {
   const [unmaskedKeys, setUnmaskedKeys] = useState<Set<string>>(new Set());
 
+
+    const maskTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+
   // Mask API key for display
   const maskApiKey = (key: string): string => {
-    if (key.length <= 3) return '••••';
-    const prefix = key.substring(0, 3);
-    return prefix + '••••••••••••';
-  };
+    // Replace every character with a bullet (•) while keeping the same length
+    return '•'.repeat(key.length);
+    };
+
+
 
   // Toggle unmask for a specific key
-  const toggleUnmask = (id: string) => {
-    setUnmaskedKeys((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+    const toggleUnmask = (id: string) => {
+        setUnmaskedKeys((prev) => {
+            const newSet = new Set(prev);
+
+            const isCurrentlyUnmasked = newSet.has(id);
+
+            // Always clear any existing timer for this row
+            const existingTimer = maskTimersRef.current[id];
+            if (existingTimer) {
+                clearTimeout(existingTimer);
+                delete maskTimersRef.current[id];
+            }
+
+            if (isCurrentlyUnmasked) {
+                // If user is masking manually, just mask it now
+                newSet.delete(id);
+                return newSet;
+            }
+
+            // Unmask now...
+            newSet.add(id);
+
+            // ...then auto-mask after 3 seconds
+            maskTimersRef.current[id] = setTimeout(() => {
+                setUnmaskedKeys((prev2) => {
+                    const next = new Set(prev2);
+                    next.delete(id);
+                    return next;
+                });
+                delete maskTimersRef.current[id];
+            }, 1500);
+
+            return newSet;
+        });
+    };
+
+
+    useEffect(() => {
+        return () => {
+            Object.values(maskTimersRef.current).forEach(clearTimeout);
+            maskTimersRef.current = {};
+        };
+    }, []);
+
 
   // Check if a key is unmasked
   const isUnmasked = (id: string): boolean => {
