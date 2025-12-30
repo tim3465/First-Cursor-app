@@ -20,6 +20,7 @@ export default function DashboardsPage() {
   const [formKey, setFormKey] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [unmaskedKeys, setUnmaskedKeys] = useState<Set<string>>(new Set());
 
   // Fetch API keys
   const fetchApiKeys = async () => {
@@ -147,6 +148,31 @@ export default function DashboardsPage() {
     navigator.clipboard.writeText(text);
     setSuccess('Copied to clipboard!');
     setTimeout(() => setSuccess(null), 2000);
+  };
+
+  // Mask API key for display
+  const maskApiKey = (key: string): string => {
+    if (key.length <= 3) return '••••';
+    const prefix = key.substring(0, 3);
+    return prefix + '••••••••••••';
+  };
+
+  // Toggle unmask for a specific key
+  const toggleUnmask = (id: string) => {
+    setUnmaskedKeys((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  // Check if a key is unmasked
+  const isUnmasked = (id: string): boolean => {
+    return unmaskedKeys.has(id);
   };
 
   return (
@@ -303,8 +329,52 @@ export default function DashboardsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <code className="text-sm text-zinc-600 dark:text-zinc-400 font-mono">
-                            {key.key.substring(0, 20)}...
+                            {isUnmasked(key.id) ? key.key : maskApiKey(key.key)}
                           </code>
+                          <button
+                            onClick={() => toggleUnmask(key.id)}
+                            className="text-xs px-2 py-1 bg-zinc-200 dark:bg-zinc-700 text-black dark:text-zinc-50 rounded hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
+                            title={isUnmasked(key.id) ? 'Mask' : 'Unmask'}
+                            aria-label={isUnmasked(key.id) ? 'Mask API key' : 'Unmask API key'}
+                          >
+                            {isUnmasked(key.id) ? (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                              </svg>
+                            )}
+                          </button>
                           <button
                             onClick={() => copyToClipboard(key.key)}
                             className="text-xs px-2 py-1 bg-zinc-200 dark:bg-zinc-700 text-black dark:text-zinc-50 rounded hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
