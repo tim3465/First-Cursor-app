@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Toast from '@/components/Toast';
+import { useToast } from '@/hooks/useToast';
 
 interface ApiKey {
   id: string;
@@ -18,10 +20,8 @@ export default function DashboardsPage() {
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
   const [formName, setFormName] = useState('');
   const [formKey, setFormKey] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [unmaskedKeys, setUnmaskedKeys] = useState<Set<string>>(new Set());
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const { toast, showSuccess, showError } = useToast();
 
   // Fetch API keys
   const fetchApiKeys = async () => {
@@ -32,10 +32,10 @@ export default function DashboardsPage() {
         const data = await response.json();
         setApiKeys(data);
       } else {
-        setError('Failed to fetch API keys');
+        showError('Failed to fetch API keys');
       }
     } catch (err) {
-      setError('Error loading API keys');
+      showError('Error loading API keys');
     } finally {
       setLoading(false);
     }
@@ -48,8 +48,6 @@ export default function DashboardsPage() {
   // Create new API key
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
 
     try {
       const response = await fetch('/api/api-keys', {
@@ -59,24 +57,22 @@ export default function DashboardsPage() {
       });
 
       if (response.ok) {
-        setSuccess('API key created successfully!');
+        showSuccess('API key created successfully!');
         setFormName('');
         setShowCreateForm(false);
         fetchApiKeys();
       } else {
         const data = await response.json();
-        setError(data.error || 'Failed to create API key');
+        showError(data.error || 'Failed to create API key');
       }
     } catch (err) {
-      setError('Error creating API key');
+      showError('Error creating API key');
     }
   };
 
   // Update API key
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
 
     if (!editingKey) return;
 
@@ -88,17 +84,17 @@ export default function DashboardsPage() {
       });
 
       if (response.ok) {
-        setSuccess('API key updated successfully!');
+        showSuccess('API key updated successfully!');
         setFormName('');
         setFormKey('');
         setEditingKey(null);
         fetchApiKeys();
       } else {
         const data = await response.json();
-        setError(data.error || 'Failed to update API key');
+        showError(data.error || 'Failed to update API key');
       }
     } catch (err) {
-      setError('Error updating API key');
+      showError('Error updating API key');
     }
   };
 
@@ -108,23 +104,20 @@ export default function DashboardsPage() {
       return;
     }
 
-    setError(null);
-    setSuccess(null);
-
     try {
       const response = await fetch(`/api/api-keys?id=${id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        setSuccess('API key deleted successfully!');
+        showSuccess('API key deleted successfully!');
         fetchApiKeys();
       } else {
         const data = await response.json();
-        setError(data.error || 'Failed to delete API key');
+        showError(data.error || 'Failed to delete API key');
       }
     } catch (err) {
-      setError('Error deleting API key');
+      showError('Error deleting API key');
     }
   };
 
@@ -148,11 +141,9 @@ export default function DashboardsPage() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setToast({ message: 'Copied to clipboard.', type: 'success' });
-      setTimeout(() => setToast(null), 2500);
+      showSuccess('Copied to clipboard.');
     } catch (err) {
-      setToast({ message: 'Failed to copy.', type: 'error' });
-      setTimeout(() => setToast(null), 2500);
+      showError('Failed to copy.');
     }
   };
 
@@ -183,49 +174,7 @@ export default function DashboardsPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black py-8 px-4 sm:px-6 lg:px-8">
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed top-4 right-4 z-50 transition-opacity duration-300">
-          <div
-            className={`px-4 py-3 rounded-lg shadow-lg border ${
-              toast.type === 'success'
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
-                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              {toast.type === 'success' ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-              <span className="text-sm font-medium">{toast.message}</span>
-            </div>
-          </div>
-        </div>
-      )}
+      <Toast toast={toast} />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -255,18 +204,6 @@ export default function DashboardsPage() {
             </button>
           </div>
         </div>
-
-        {/* Messages */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
-            {success}
-          </div>
-        )}
 
         {/* Create/Edit Form */}
         {(showCreateForm || editingKey) && (
