@@ -1,13 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-// In-memory storage (in production, use a database)
-let apiKeys: Array<{
-  id: string;
-  name: string;
-  key: string;
-  createdAt: string;
-  lastUsed?: string;
-}> = [];
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase-server';
 
 // Generate a random API key
 function generateApiKey(): string {
@@ -20,7 +12,35 @@ function generateApiKey(): string {
 
 // GET - Fetch all API keys
 export async function GET() {
-  return NextResponse.json(apiKeys);
+  try {
+    const { data, error } = await supabase
+      .from('api_key')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return NextResponse.json(
+        { error: 'Failed to fetch API keys' },
+        { status: 500 }
+      );
+    }
+
+    // Transform to match expected JSON shape
+    const apiKeys = data.map((row) => ({
+      id: row.id,
+      name: row.name,
+      key: row.value,    
+      createdAt: row.created_at,
+     // lastUsed: row.last_used || undefined, // keep only if this column exists
+    }));
+
+    return NextResponse.json(apiKeys);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch API keys' },
+      { status: 500 }
+    );
+  }
 }
 
 // POST - Create a new API key
@@ -36,14 +56,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const apiKey = generateApiKey();
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('api_key')
+      .insert({
+        name: name.trim(),
+          value: apiKey,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { error: 'Failed to create API key' },
+        { status: 500 }
+      );
+    }
+
+    // Transform to match expected JSON shape
     const newApiKey = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      name: name.trim(),
-      key: generateApiKey(),
-      createdAt: new Date().toISOString(),
+      id: data.id,
+      name: data.name,
+      key: data.value,         
+      createdAt: data.created_at,
+    //  lastUsed: data.last_used || undefined,
     };
 
-    apiKeys.push(newApiKey);
     return NextResponse.json(newApiKey, { status: 201 });
   } catch (error) {
     return NextResponse.json(
@@ -52,61 +92,49 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// PUT - Update an API key
 export async function PUT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { id, name } = body;
+    const { id, name } = await request.json();
 
     if (!id || !name || typeof name !== 'string' || name.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'ID and name are required' },
-        { status: 400 }
-      );
+        return NextResponse.json({ error: 'ID and name are required' }, { status: 400 });
     }
 
-    const index = apiKeys.findIndex((key) => key.id === id);
-    if (index === -1) {
-      return NextResponse.json({ error: 'API key not found' }, { status: 404 });
+    const { data, error } = await supabase
+        .from('api_key')
+        .update({ name: name.trim() })
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) {
+        return NextResponse.json({ error: 'Failed to update API key' }, { status: 500 });
     }
 
-    apiKeys[index] = {
-      ...apiKeys[index],
-      name: name.trim(),
-    };
-
-    return NextResponse.json(apiKeys[index]);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Invalid request body' },
-      { status: 400 }
-    );
-  }
+    return NextResponse.json({
+        id: data.id,
+        name: data.name,
+        key: data.value,
+        createdAt: data.created_at,
+    });
 }
-
-// DELETE - Delete an API key
 export async function DELETE(request: NextRequest) {
-  try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    const index = apiKeys.findIndex((key) => key.id === id);
-    if (index === -1) {
-      return NextResponse.json({ error: 'API key not found' }, { status: 404 });
+    const { error } = await supabase
+        .from('api_key')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        return NextResponse.json({ error: 'Failed to delete API key' }, { status: 500 });
     }
 
-    apiKeys.splice(index, 1);
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Invalid request' },
-      { status: 400 }
-    );
-  }
 }
+
 
