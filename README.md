@@ -1,3 +1,14 @@
+
+
+Why this project exists
+
+This app was created as a learning exercise to explore AI-assisted development using the Cursor editor. It demonstrates a simple API key dashboard built with Next.js, with a focus on clean UI, component structure, and refactoring workflows.
+
+The goal of this project is learning and experimentation. It is not intended for production use, nor does it represent the full scope of my capabilities as a front-end developer.
+
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
