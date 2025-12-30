@@ -226,6 +226,16 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+
+  // Define which routes have actual pages/functionality
+  const functionalRoutes = ['/', '/dashboards', '/api-playground'];
+
+  const handleModalOpen = (label: string) => {
+    setModalTitle(label);
+    setShowModal(true);
+  };
 
   return (
     <aside
@@ -315,6 +325,59 @@ export default function Sidebar() {
       <nav className={`flex-1 ${isCollapsed ? 'p-2' : 'p-4'} space-y-1 overflow-y-auto`}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
+          const hasFunctionality = functionalRoutes.includes(item.href);
+          
+          if (!hasFunctionality) {
+            return (
+              <button
+                key={item.href}
+                onClick={() => handleModalOpen(item.label)}
+                className={`flex items-center ${
+                  isCollapsed ? 'justify-center' : 'gap-3'
+                } ${isCollapsed ? 'px-2' : 'px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors relative group w-full ${
+                  isActive
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                }`}
+                title={isCollapsed ? item.label : undefined}
+              >
+                <span
+                  className={`relative ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}`}
+                >
+                  {item.icon}
+                  {item.badge !== undefined && (
+                    <span
+                      className={`absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-medium text-white bg-red-500 rounded-full ${
+                        isCollapsed ? '' : 'hidden'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </span>
+                {!isCollapsed && (
+                  <>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge !== undefined && (
+                      <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-red-500 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </>
+                )}
+                {/* Tooltip for collapsed state */}
+                {isCollapsed && (
+                  <span className="absolute left-full ml-2 px-2 py-1 text-xs font-medium text-white bg-zinc-900 dark:bg-zinc-700 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+                    {item.label}
+                    {item.badge !== undefined && (
+                      <span className="ml-2 text-red-400">({item.badge})</span>
+                    )}
+                  </span>
+                )}
+              </button>
+            );
+          }
+          
           return (
             <Link
               key={item.href}
@@ -365,6 +428,46 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 dark:bg-black/70"
+            onClick={() => setShowModal(false)}
+          />
+          {/* Modal Content */}
+          <div className="relative bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-black dark:text-zinc-50">
+                {modalTitle}
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
+                aria-label="Close modal"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <p className="text-zinc-600 dark:text-zinc-400">Feature coming soon</p>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
