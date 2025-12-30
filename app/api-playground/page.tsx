@@ -1,14 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function ApiPlaygroundPage() {
   const [apiKey, setApiKey] = useState('');
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('API Key submitted:', apiKey);
+    if (apiKey.trim()) {
+      // Navigate to /protected with the API key as a query parameter
+      router.push(`/protected?apiKey=${encodeURIComponent(apiKey.trim())}`);
+    }
   };
 
   return (
