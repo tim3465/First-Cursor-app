@@ -249,7 +249,7 @@ export default function Sidebar() {
           <div className="flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-blue-600 flex-shrink-0"
+              className="h-5 w-5 text-black flex-shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -262,23 +262,7 @@ export default function Sidebar() {
               />
             </svg>
             {!isCollapsed && (
-              <>
-                <span className="text-lg font-semibold text-blue-600">Dandy</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </>
+              <span className="text-lg font-semibold text-black">Dandy</span>
             )}
           </div>
           <button
@@ -336,13 +320,13 @@ export default function Sidebar() {
                   isCollapsed ? 'justify-center' : 'gap-3'
                 } ${isCollapsed ? 'px-2' : 'px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors relative group w-full ${
                   isActive
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    ? 'bg-black text-white'
+                    : 'text-black hover:bg-zinc-100 dark:hover:bg-zinc-800'
                 }`}
                 title={isCollapsed ? item.label : undefined}
               >
                 <span
-                  className={`relative ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}`}
+                  className={`relative ${isActive ? 'text-white' : 'text-black'}`}
                 >
                   {item.icon}
                   {item.badge !== undefined && (
@@ -357,7 +341,7 @@ export default function Sidebar() {
                 </span>
                 {!isCollapsed && (
                   <>
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className={`flex-1 text-left ${isActive ? 'text-white' : 'text-black'}`}>{item.label}</span>
                     {item.badge !== undefined && (
                       <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-red-500 rounded-full">
                         {item.badge}
@@ -386,13 +370,13 @@ export default function Sidebar() {
                 isCollapsed ? 'justify-center' : 'gap-3'
               } ${isCollapsed ? 'px-2' : 'px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors relative group ${
                 isActive
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
               title={isCollapsed ? item.label : undefined}
             >
               <span
-                className={`relative ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}`}
+                className={`relative ${isActive ? 'text-white' : 'text-black'}`}
               >
                 {item.icon}
                 {item.badge !== undefined && (
@@ -407,7 +391,7 @@ export default function Sidebar() {
               </span>
               {!isCollapsed && (
                 <>
-                  <span className="flex-1">{item.label}</span>
+                  <span className={`flex-1 ${isActive ? 'text-white' : 'text-black'}`}>{item.label}</span>
                   {item.badge !== undefined && (
                     <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-red-500 rounded-full">
                       {item.badge}
